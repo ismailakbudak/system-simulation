@@ -113,24 +113,24 @@ class Ui_MainWindow():
         self.tabSettings = QtGui.QWidget()
         self.tabSettings.setObjectName(_fromUtf8("tabSettings"))   
         
-        # settings - Grow limit label title
-        self.labelNodesGrowLimit = QtGui.QLabel(self.tabSettings)
-        self.labelNodesGrowLimit.setGeometry(QtCore.QRect(30, 10, 170, 30)) 
-        self.labelNodesGrowLimit.setObjectName(_fromUtf8("labelNodesGrowLimit"))
-        self.labelNodesGrowLimit.setText(_translate("MainWindow", "Grow Limit : ", None))
-        # settings - Nodes count label title
-        self.textEditGrowLimit = QtGui.QLineEdit(self.tabSettings)
-        self.textEditGrowLimit.setGeometry(QtCore.QRect(180, 10, 200, 30))
-        self.textEditGrowLimit.setObjectName(_fromUtf8("textEditGrowLimit")) 
-        # settings - Grow limit label title
-        self.labelNodesGrowthRate = QtGui.QLabel(self.tabSettings)
-        self.labelNodesGrowthRate.setGeometry(QtCore.QRect(30, 50, 170, 30)) 
-        self.labelNodesGrowthRate.setObjectName(_fromUtf8("labelNodesGrowthRate"))
-        self.labelNodesGrowthRate.setText(_translate("MainWindow", "Growth Rate : ", None))
-        # settings - Nodes count label title
-        self.textEditGrowthRate = QtGui.QLineEdit(self.tabSettings)
-        self.textEditGrowthRate.setGeometry(QtCore.QRect(180, 50, 200, 30))
-        self.textEditGrowthRate.setObjectName(_fromUtf8("textEditGrowthRate")) 
+        # # settings - Grow limit label title
+        # self.labelNodesGrowLimit = QtGui.QLabel(self.tabSettings)
+        # self.labelNodesGrowLimit.setGeometry(QtCore.QRect(30, 10, 170, 30)) 
+        # self.labelNodesGrowLimit.setObjectName(_fromUtf8("labelNodesGrowLimit"))
+        # self.labelNodesGrowLimit.setText(_translate("MainWindow", "Grow Limit : ", None))
+        # # settings - Nodes count label title
+        # self.textEditGrowLimit = QtGui.QLineEdit(self.tabSettings)
+        # self.textEditGrowLimit.setGeometry(QtCore.QRect(200, 10, 200, 30))
+        # self.textEditGrowLimit.setObjectName(_fromUtf8("textEditGrowLimit")) 
+        # # settings - Grow limit label title
+        # self.labelNodesGrowthRate = QtGui.QLabel(self.tabSettings)
+        # self.labelNodesGrowthRate.setGeometry(QtCore.QRect(30, 50, 170, 30)) 
+        # self.labelNodesGrowthRate.setObjectName(_fromUtf8("labelNodesGrowthRate"))
+        # self.labelNodesGrowthRate.setText(_translate("MainWindow", "Growth Rate : ", None))
+        # # settings - Nodes count label title
+        # self.textEditGrowthRate = QtGui.QLineEdit(self.tabSettings)
+        # self.textEditGrowthRate.setGeometry(QtCore.QRect(200, 50, 200, 30))
+        # self.textEditGrowthRate.setObjectName(_fromUtf8("textEditGrowthRate")) 
         # settings - Node max capacity limit label  
         self.labelNodesMaxCapacity = QtGui.QLabel(self.tabSettings)
         self.labelNodesMaxCapacity.setGeometry(QtCore.QRect(30, 90, 170, 30)) 
@@ -138,15 +138,23 @@ class Ui_MainWindow():
         self.labelNodesMaxCapacity.setText(_translate("MainWindow", "Node Max Capacity : ", None))
         # settings - Node max capacity limit label
         self.textEditNodeMaxCapacity = QtGui.QLineEdit(self.tabSettings)
-        self.textEditNodeMaxCapacity.setGeometry(QtCore.QRect(180, 90, 200, 30))
+        self.textEditNodeMaxCapacity.setGeometry(QtCore.QRect(200, 90, 200, 30))
         self.textEditNodeMaxCapacity.setObjectName(_fromUtf8("textEditNodeMaxCapacity")) 
 
         # settings - traceGrowth
-        self.checkBoxTraceGrowth = QtGui.QCheckBox(self.tabSettings)
-        self.checkBoxTraceGrowth.setGeometry(QtCore.QRect(85, 170, 300, 30))
-        self.checkBoxTraceGrowth.setObjectName(_fromUtf8("checkBoxTraceGrowth"))
-        self.checkBoxTraceGrowth.setText(_translate("MainWindow", "Growth Log", None))
-        self.checkBoxTraceGrowth.setChecked(False)
+        # self.checkBoxTraceGrowth = QtGui.QCheckBox(self.tabSettings)
+        # self.checkBoxTraceGrowth.setGeometry(QtCore.QRect(85, 170, 300, 30))
+        # self.checkBoxTraceGrowth.setObjectName(_fromUtf8("checkBoxTraceGrowth"))
+        # self.checkBoxTraceGrowth.setText(_translate("MainWindow", "Growth Log", None))
+        # self.checkBoxTraceGrowth.setChecked(False)
+        
+        # settings - traceGrowth
+        self.checkBoxUseRandomCapacity = QtGui.QCheckBox(self.tabSettings)
+        self.checkBoxUseRandomCapacity.setGeometry(QtCore.QRect(85, 170, 300, 30))
+        self.checkBoxUseRandomCapacity.setObjectName(_fromUtf8("checkBoxUseRandomCapacity"))
+        self.checkBoxUseRandomCapacity.setText(_translate("MainWindow", "Use Random Capacity", None))
+        self.checkBoxUseRandomCapacity.setChecked(False)
+
         # settings - traceLog
         self.checkBoxTraceLog = QtGui.QCheckBox(self.tabSettings)
         self.checkBoxTraceLog.setGeometry(QtCore.QRect(85, 200, 300, 30))
@@ -166,11 +174,11 @@ class Ui_MainWindow():
         self.checkBoxTraceElectionVisual.setText(_translate("MainWindow", "Election Result Display", None))
         self.checkBoxTraceElectionVisual.setChecked(False)
         # settings - traceGrowthVisual
-        self.checkBoxTraceGrowthVisual = QtGui.QCheckBox(self.tabSettings)
-        self.checkBoxTraceGrowthVisual.setGeometry(QtCore.QRect(85, 290, 300, 30))
-        self.checkBoxTraceGrowthVisual.setObjectName(_fromUtf8("checkBoxTraceGrowthVisual"))
-        self.checkBoxTraceGrowthVisual.setText(_translate("MainWindow", "Growth Result Step By Step", None))
-        self.checkBoxTraceGrowthVisual.setChecked(False)
+        # self.checkBoxTraceGrowthVisual = QtGui.QCheckBox(self.tabSettings)
+        # self.checkBoxTraceGrowthVisual.setGeometry(QtCore.QRect(85, 290, 300, 30))
+        # self.checkBoxTraceGrowthVisual.setObjectName(_fromUtf8("checkBoxTraceGrowthVisual"))
+        # self.checkBoxTraceGrowthVisual.setText(_translate("MainWindow", "Growth Result Step By Step", None))
+        # self.checkBoxTraceGrowthVisual.setChecked(False)
 
         # Tab main initialized
         self.tabNode = QtGui.QWidget()
@@ -220,6 +228,9 @@ class Ui_MainWindow():
         
     def readFiles(self):
         self.set_graph_trace()
+        # self.graph.GROWTH_RATE = int( str( self.textEditGrowthRate.text()      ))  
+        # self.graph.GROWTH_LIMIT= int( str( self.textEditGrowLimit.text()       ))  
+        self.graph.MAX_CAPACITY= int( str( self.textEditNodeMaxCapacity.text() )) 
         self.graph.removeAll()
         self.graph.readFiles()
         self.fill_fields()    
@@ -231,8 +242,8 @@ class Ui_MainWindow():
     def set_labels(self):
         num = len(self.graph.nodes.keys())
         self.labelNodesCount.setText(  "Number of Nodes : %s" % ( str(num) ) )
-        self.textEditGrowthRate.setText( str(self.graph.GROWTH_RATE) )
-        self.textEditGrowLimit.setText( str(self.graph.GROWTH_LIMIT) )
+        # self.textEditGrowthRate.setText( str(self.graph.GROWTH_RATE) )
+        # self.textEditGrowLimit.setText( str(self.graph.GROWTH_LIMIT) )
         self.textEditNodeMaxCapacity.setText( str(self.graph.MAX_CAPACITY) )
         
     def fill_combobox(self): 
@@ -247,20 +258,25 @@ class Ui_MainWindow():
         else:
             self.graph.traceLog = False
 
-        if self.checkBoxTraceGrowth.isChecked():
-            self.graph.traceGrowth = True
+        # if self.checkBoxTraceGrowth.isChecked():
+        #     self.graph.traceGrowth = True
+        # else:
+        #     self.graph.traceGrowth = False
+
+        if self.checkBoxUseRandomCapacity.isChecked():
+            self.graph.useRandomCapacity = True
         else:
-            self.graph.traceGrowth = False
+            self.graph.useRandomCapacity = False
             
         if self.checkBoxTraceElection.isChecked():
             self.graph.traceElection = True
         else:
             self.graph.traceElection = False
             
-        if self.checkBoxTraceGrowthVisual.isChecked():
-            self.graph.traceGrowthVisual = True
-        else:
-            self.graph.traceGrowthVisual = False
+        # if self.checkBoxTraceGrowthVisual.isChecked():
+        #     self.graph.traceGrowthVisual = True
+        # else:
+        #     self.graph.traceGrowthVisual = False
             
         if self.checkBoxTraceElectionVisual.isChecked():
             self.graph.traceElectionVisual = True
@@ -275,20 +291,25 @@ class Ui_MainWindow():
         else:
             self.checkBoxTraceLog.setChecked(False)
 
-        if self.graph.traceGrowth:
-            self.checkBoxTraceGrowth.setChecked(True)
+        # if self.graph.traceGrowth:
+        #     self.checkBoxTraceGrowth.setChecked(True)
+        # else:
+        #     self.checkBoxTraceGrowth.setChecked(False)
+
+        if self.graph.useRandomCapacity:
+            self.checkBoxUseRandomCapacity.setChecked(True)
         else:
-            self.checkBoxTraceGrowth.setChecked(False)
+            self.checkBoxUseRandomCapacity.setChecked(False)
 
         if self.graph.traceElection:
             self.checkBoxTraceElection.setChecked(True)
         else:
             self.checkBoxTraceElection.setChecked(False)
 
-        if self.graph.traceGrowthVisual:
-            self.checkBoxTraceGrowthVisual.setChecked(True)
-        else:
-            self.checkBoxTraceGrowthVisual.setChecked(False)
+        # if self.graph.traceGrowthVisual:
+        #     self.checkBoxTraceGrowthVisual.setChecked(True)
+        # else:
+        #     self.checkBoxTraceGrowthVisual.setChecked(False)
 
         if self.graph.traceElectionVisual:
             self.checkBoxTraceElectionVisual.setChecked(True)

@@ -9,7 +9,25 @@ import networkx as nx
 import random
 from collections import OrderedDict
 import pprint
+import math
+import numpy as np
 pp = pprint.PrettyPrinter(indent=4)
+
+class Distribution(object):
+    """docstring for Distribution"""
+    def __init__(self, LOC=0.0, SCALE=1.0, SIZE=None):
+        super(Distribution, self).__init__()
+        self.LOC = LOC
+        self.SCALE = SCALE
+        self.SIZE = SIZE
+
+# Node position class
+class Position(object):
+    """docstring for Position"""
+    def __init__(self, X, Y):
+        super(Position, self).__init__()
+        self.X = X
+        self.Y = Y
 
 # Node objects for graph structure 
 class Node(object): 
@@ -17,7 +35,7 @@ class Node(object):
     def __init__(self, ID, CAPACITY, X=0, Y=0):
         self.ID = ID
         self.CAPACITY = CAPACITY
-        self.POSITION = (X,Y)
+        self.POSITION = Position(X,Y)
         self.VISITED = False
         self.NAME = 'N:%s-C:%s'%(str(ID),str(CAPACITY))
         self.COORDINATOR = self
@@ -101,10 +119,17 @@ class Graph(object):
         self.traceLog=True
         self.traceGrowthVisual=False
         self.traceElectionVisual=True
-        self.MAX_CAPACITY=400
+        self.useRandomCapacity=True
+        self.MAX_CAPACITY=6
         self.GROWTH_LIMIT = 100
         self.GROWTH_RATE = 10
-        self.number = 0
+        self.nodeNumber = 10
+        self.distributions = [ 
+            Distribution(4,9), 
+            Distribution(3,5), 
+            Distribution(5,8), 
+            Distribution(1,4), 
+            Distribution(9,4) ]
         self.log("Graph initialized..")  
             
     """ 
@@ -338,16 +363,29 @@ class Graph(object):
             length = self.MAX_CAPACITY
         amount = self.MAX_CAPACITY / length
         def find_color(node):
-            index = node.CAPACITY/amount
-            if index > length:
-                index = length 
-            return colors[index]
-
+            X = node.POSITION.X
+            Y = node.POSITION.Y
+            if X >= 0 and Y >= 0:
+                index = 0
+            elif X <= 0 and Y >= 0:
+                index = 1
+            elif X >= 0 and Y <= 0:
+                index = 2
+            else:
+                index = 3
+            return colors[index]         
+        def find_length(node, node_neighbour):
+             return round( math.sqrt( math.pow((node.POSITION.X - node_neighbour.POSITION.X), 2) + math.pow((node.POSITION.Y - node_neighbour.POSITION.Y), 2)), 2)
         graph = nx.DiGraph()
+        node_size = []
         for node in self.nodes.values():
+            node_size.append(100*node.CAPACITY)    
             graph.add_node(node)
             for node_neighbour in node.neighbours.values():
-                graph.add_edge(node, node_neighbour, color=find_color(node_neighbour) )
+                graph.add_edge(node, 
+                                node_neighbour,
+                                weight=find_length(node, node_neighbour), 
+                                color=find_color(node_neighbour) )
         node_colors = map(find_color, graph.nodes())
 
         if len(self.nodes) > 1:
@@ -358,11 +396,20 @@ class Graph(object):
 
         G=nx.grid_2d_graph(1,1)
         plt.subplot(111)     
+        labels = nx.get_edge_attributes(graph,'weight')
+        nx.draw_networkx_edge_labels(
+            graph,
+            self.positions,
+            edge_labels=labels,  
+            font_family='ubuntu', 
+            edgelist=edges,
+            edge_color=edge_colors
+        )
         nx.draw(graph,
                 self.positions,
                 with_labels=True,
-                font_size=7,
-                node_size=1300,
+                font_size=9,
+                node_size=1800,#node_size,
                 font_family='ubuntu',
                 font_color='red',
                 node_color=node_colors, 
@@ -370,18 +417,8 @@ class Graph(object):
                 edge_color=edge_colors, 
                 width=0.4)
         # Information Text
-        x=-1.5;y=3;i=1;flag=False;dist=0.3
+        x=-9.0;y=11
         plt.text(x, y+0.5, 'Some text will come here', bbox=dict(facecolor='red', alpha=0.5)) 
-        for color in colors:
-            if i <= length:
-                text =  "%s <= CAPACITY < %s"%(str((i-1) * amount), str(i * amount))
-            else: 
-                text =  "%s <= CAPACITY  "%(str((i-1) * amount) )
-                flag=True
-            plt.text(x, y, text, bbox=dict(facecolor=color, alpha=0.5))
-            if flag:
-                break
-            y-=dist; i+=1
         plt.axis('on')
         plt.grid('on')     
         plt.show()  
@@ -405,24 +442,37 @@ class Graph(object):
             if node.ID == start.ID:
                 return coordinator_colors[2]
             return coordinator_colors[3] 
-
+        def find_length(node, node_neighbour):
+             return round( math.sqrt( math.pow((node.POSITION.X - node_neighbour.POSITION.X), 2) + math.pow((node.POSITION.Y - node_neighbour.POSITION.Y), 2)), 2)
         graph = nx.DiGraph()
+        node_size = []
         for node in self.nodes.values():
+            node_size.append(100*node.CAPACITY)  
             graph.add_node(node)
             for node_neighbour in node.neighbours.values():
                 graph.add_edge( node, 
-                                node_neighbour,  
+                                node_neighbour, 
+                                weight=find_length(node, node_neighbour), 
                                 coordinator_color=find_coordinator_color(node_neighbour) )
         node_coordinator_colors = map(find_coordinator_color, graph.nodes()) 
         coordinator_edges,coordinator_edge_colors = zip(*nx.get_edge_attributes(graph,'coordinator_color').items()) 
         
         G=nx.grid_2d_graph(1,1)
-        plt.subplot(111)     
+        plt.subplot(111)    
+        labels = nx.get_edge_attributes(graph,'weight')
+        nx.draw_networkx_edge_labels(
+            graph,
+            self.positions,
+            edge_labels=labels,  
+            font_family='ubuntu', 
+            edgelist=coordinator_edges,
+            edge_color=coordinator_edge_colors
+        ) 
         nx.draw(graph,
                 self.positions,
                 with_labels=True,
-                font_size=7,
-                node_size=1300,
+                font_size=9,
+                node_size=1800,#node_size,
                 font_family='ubuntu',
                 font_color='red',
                 node_color=node_coordinator_colors, 
@@ -430,8 +480,8 @@ class Graph(object):
                 edge_color=coordinator_edge_colors, 
                 width=0.4)
         # Information Text
-        x=-1.5;y=3;i=1;flag=False;dist=0.3
-        plt.text(x, y+0.5, 'Some text will come here', bbox=dict(facecolor='red', alpha=0.5)) 
+        x=-9.0;y=11;i=1;flag=False;dist=1
+        plt.text(x, y+1.5, 'Some text will come here', bbox=dict(facecolor='red', alpha=0.5)) 
         for color in coordinator_colors:
             if color == coordinator_colors[0]:
                 text = "Coordinator"
@@ -459,18 +509,36 @@ class Graph(object):
         #nodes.txt => node_id capacity
         #edges.txt => node_id node_id 
         try:
-            f = open('nodes.txt','r')
+            f = open('nodes.txt','r') 
+            ID = 1
             lines = f.readlines()
             for line in lines:
                 content = line.strip().split()
-                if len(content) == 4:
-                    ID = int(content[0])
-                    CAPACITY = int(content[1])
-                    X = float(content[2])
-                    Y = float(content[3])
+                if len(content) == 3: 
+                    X = float(content[1])
+                    Y = float(content[2])
+                    if self.useRandomCapacity: 
+                        if X > 0 and Y > 0:
+                            index = 0
+                        elif X < 0 and Y > 0:
+                            index = 1
+                        elif X > 0 and Y < 0:
+                            index = 2
+                        else:
+                            index = 3     
+                        CAPACITY =  round(  np.random.normal(
+                            loc=self.distributions[index].LOC, 
+                            scale=self.distributions[index].SCALE, 
+                            size=self.distributions[index].SIZE), 2 ) #random.randint(0, self.MAX_CAPACITY)
+                    else:
+                        CAPACITY = int(content[0])
+
                     node = Node(ID, CAPACITY, X, Y)
                     self.add(node)
-                    self.positions[node] = (X,Y) 
+                    self.positions[node] = (X,Y)
+                    if ID == (self.nodeNumber * 4):
+                        break
+                    ID += 1 
 
             f = open('edges.txt','r')
             lines = f.readlines()
