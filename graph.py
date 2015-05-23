@@ -43,10 +43,10 @@ Return:
 """
 def getDistributions():
     return [ 
-        Distribution(3,0.6), 
-        Distribution(3,0.6), 
-        Distribution(3,0.6), 
-        Distribution(3,0.6), 
+        Distribution(2,2), 
+        Distribution(1,5), 
+        Distribution(3,6), 
+        Distribution(7,4), 
         Distribution(3,0.6) ]
 
 """ 
