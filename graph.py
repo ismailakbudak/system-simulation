@@ -13,7 +13,16 @@ import math
 import numpy as np
 pp = pprint.PrettyPrinter(indent=4)
 
-# Find coordinate region 
+"""
+Find coordinate region 
+Args:
+    X: float 
+        x coodinate value
+    Y: float
+        y coodinate value        
+Return:
+    int region of x and y coordinates     
+"""
 def findIndex(X, Y):
     if X > 0 and Y > 0:
         index = 0
@@ -25,7 +34,13 @@ def findIndex(X, Y):
         index = 3
     return index
 
-# Get distributions for graph node capacity
+"""
+Get distributions for graph node capacity
+Args:
+    None
+Return:
+    Array of Distribution class        
+"""
 def getDistributions():
     return [ 
         Distribution(3,0.6), 
@@ -34,7 +49,16 @@ def getDistributions():
         Distribution(3,0.6), 
         Distribution(3,0.6) ]
 
-# Distrubution class
+""" 
+Normal Distrubution class
+Args:  
+    LOC: float 
+        Median of distribution
+    SCALE: float
+        Standart divion of distribution
+    SIZE: int or tuple of ints, optional
+        Output shape
+""" 
 class Distribution(object):
     """docstring for Distribution"""
     def __init__(self, LOC=0.0, SCALE=1.0, SIZE=None):
@@ -43,7 +67,14 @@ class Distribution(object):
         self.SCALE = SCALE
         self.SIZE = SIZE
 
-# Node position class
+""" 
+Node position class
+Args:  
+    X: int 
+        x coordinate
+    Y: int 
+        y coordinate
+""" 
 class Position(object):
     """docstring for Position"""
     def __init__(self, X, Y):
@@ -51,7 +82,14 @@ class Position(object):
         self.X = X
         self.Y = Y
 
-# Node objects for graph structure 
+""" 
+Node class for graph structure 
+Args: 
+    ID: Integer unique id of node
+    CAPACITY: Integer capacity of node
+    X: Integer node x coordinate
+    Y: Integer node y coordinate
+""" 
 class Node(object): 
     
     def __init__(self, ID, CAPACITY, X=0, Y=0):
@@ -131,21 +169,21 @@ class Node(object):
         #print("NODE:: %s"%(message) ) 
         pass
 
-# Graph class
+""" 
+Graph class
+Args: 
+    None
+""" 
 class Graph(object):
 
     def __init__(self):
         self.nodes={}
         self.positions={}
-        self.lastID=0
-        self.traceGrowth=True
+        self.lastID=0 
         self.traceElection=True
-        self.traceLog=True
-        self.traceGrowthVisual=False
+        self.traceLog=True 
         self.traceElectionVisual=True
-        self.useRandomCapacity=True
-        self.MAX_CAPACITY=6  
-        self.nodeNumber = 10
+        self.useRandomCapacity=True 
         self.distributions = getDistributions()
         self.log("Graph initialized..")  
             
@@ -207,16 +245,37 @@ class Graph(object):
         else:
             return False     
     
+    """ 
+    Unset graph nodes visited property
+    Args: 
+        None
+    Return: 
+        None
+    """
     def removeVisitedProperty(self):
         for node in self.nodes.values():
             node.VISITED = False
 
+    """ 
+    Get unvisited node in graph
+    Args:  
+        None
+    Return: 
+        Node or None
+    """
     def getNotVisitedNode(self):
         for node in self.nodes.values():
             if node.VISITED == False:
                 return node
         return None                 
 
+    """ 
+    Find coordinators in graph for different region
+    Args: 
+        None
+    Return: 
+        None
+    """        
     def findCoordinates(self):
         self.removeVisitedProperty()
         node = self.getNotVisitedNode()
@@ -226,8 +285,10 @@ class Graph(object):
             coordinator_list.append( value )
             node = self.getNotVisitedNode()
         
-        self.draw_coordinator(coordinator_list ) 
-
+        if len(coordinator_list) > 0:
+            self.draw_coordinator(coordinator_list ) 
+        else:
+            self.log('There is not any nodes')    
     """ 
     Start election algorithm on graph
     Args: 
@@ -237,7 +298,7 @@ class Graph(object):
     """
     def startElection(self,start):
         self.log_election("BEGIN election =============================")
-        self.log_election("start node : "+ str(start))
+        self.log_election("start node : "+ start.SHORT_NAME)
         self.log_election("END election =============================")
         graph = self.nodes
         visited = {}
@@ -276,7 +337,7 @@ class Graph(object):
         self.log_election("====================================")
         self.log_election("Election result : " + str(coordinator_candidates) )
         self.log_election("====================================")
-        self.log_election("Coordinator : " + str(coordinator) )
+        self.log_election("Coordinator : " + coordinator.SHORT_NAME )
         self.log_election("====================================")
 
         return { 'coordinator': coordinator, 'candidates': coordinator_candidates, 'start': start}
@@ -290,7 +351,7 @@ class Graph(object):
     """      
     def print_coordinator(self):
         for node in self.nodes.values():
-            self.log_election(" %s -> %s " % (str(node), str(node.COORDINATOR)) )    
+            self.log_election(" %s -> %s " % (node.SHORT_NAME, node.COORDINATOR.SHORT_NAME) )    
         
     """ 
     Find nodes that has maximum capacity
@@ -368,9 +429,6 @@ class Graph(object):
         Node object
     """
     def informCoordinator(self, visited, start, coordinator):
-        #self.log_election( str(self.number) + " nodes coordinator")
-        #self.number += 1
-        #self.print_coordinator()
         if len(visited[start]) == 0:
             start.COORDINATOR = coordinator
             return True
@@ -382,32 +440,20 @@ class Graph(object):
     """ 
     Draw all nodes with CAPACITY property
     Args: 
-        MAX_CAPACITY: max capacity for color index
+        None
     Return: 
         None
     """
     def draw(self):
         self.log("graph is drawing..")
         colors = ["#EFDFBB","orange","lightgreen","lightblue","#FFD300","violet","yellow","#7CB9E8","#E1A95F", "#007FFF","#CCFF00","pink","cyan"]
-        length = len(colors) - 1
-        # division by zero
-        if length >= self.MAX_CAPACITY:
-            length = self.MAX_CAPACITY
-        amount = self.MAX_CAPACITY / length
-        def find_color(node):
-            X = node.POSITION.X
-            Y = node.POSITION.Y
-            if X >= 0 and Y >= 0:
-                index = 0
-            elif X <= 0 and Y >= 0:
-                index = 1
-            elif X >= 0 and Y <= 0:
-                index = 2
-            else:
-                index = 3
-            return colors[index]         
+        
+        def find_color(node): 
+            return colors[node.REGION] 
+
         def find_length(node, node_neighbour):
              return round( math.sqrt( math.pow((node.POSITION.X - node_neighbour.POSITION.X), 2) + math.pow((node.POSITION.Y - node_neighbour.POSITION.Y), 2)), 2)
+        
         graph = nx.DiGraph()
         node_size = []
         for node in self.nodes.values():
@@ -440,16 +486,14 @@ class Graph(object):
         nx.draw(graph,
                 self.positions,
                 with_labels=True,
-                font_size=9,
-                node_size=1800,#node_size,
+                font_size=8,
+                node_size=1300,#node_size,
                 font_family='ubuntu',
                 font_color='red',
                 node_color=node_colors, 
                 edgelist=edges,
                 edge_color=edge_colors, 
-                width=0.4)
-        # Information Text
-        x=-9.0;y=11 
+                width=0.4) 
         plt.axis('on')
         plt.grid('on')     
         plt.show()  
@@ -457,8 +501,7 @@ class Graph(object):
     """ 
     Draw coordinator and coordinator candidates
     Args: 
-        coordinator: coordinator node
-        coordinator_candidates: node objects array
+        coordinator_list: election results
     Return: 
         None
     """
@@ -523,7 +566,7 @@ class Graph(object):
             candidates = value['candidates']
             start = value['start']
 
-            self.log('Coordinator %s :'%(str(coordinator)))
+            self.log('Coordinator %s :'%(coordinator.SHORT_NAME))
             for candidate in candidates:
                 # Compute shortest path lengths in the graph.
                 shortest_length = nx.shortest_path_length(graph,source=candidate, weight='weight' )
@@ -531,7 +574,7 @@ class Graph(object):
                 for l in shortest_length.values():
                     total += l
                 node_lengths.append({ 'total': total, 'node': candidate, 'coordinator': coordinator })   
-                self.log_pp('Shortest path length for %s :'%(str(candidate)), shortest_length , True ) 
+                self.log_pp('Shortest path length for %s :'%(candidate.SHORT_NAME), shortest_length , True ) 
                 self.log('Total length : %s \n'%(str(total)))    
             # Compute shortest paths in the graph. 
             # returns 0 for target and source
@@ -664,19 +707,38 @@ class Graph(object):
             self.log('Files could not read..')
             self.log('ERROR: %s' % error)   
 
+    """ 
+    Log messages 
+    Args: 
+        message: string first message
+    Return: 
+        None
+    """
     def log(self, message):
         if self.traceLog:  
             print("GRAPH:: %s"%(message) )
 
-    def log_pp(self, message, array, is_write ):
+    """ 
+    Log messages for prety print array
+    Args: 
+        message: string first message
+        array: array for prety print
+        is_write: Boolean default value is True
+    Return: 
+        None
+    """
+    def log_pp(self, message, array, is_write=True ):
         if is_write:
              print("GRAPH:: %s"%(message) )
              pp.pprint(array) 
 
-    def log_grow(self, message):
-        if self.traceGrowth:  
-            print("GRAPH GROW:: %s"%(message) )
-
+    """ 
+    Log messages 
+    Args: 
+        message: string first message
+    Return: 
+        None
+    """
     def log_election(self, message):
         if self.traceElection:  
             print("GRAPH ELECTION:: %s"%(message) )                
