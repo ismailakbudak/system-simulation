@@ -92,15 +92,15 @@ class Ui_MainWindow():
         self.pushButtonClearGraph.setText(_translate("MainWindow", "Clear Graph", None))
         self.pushButtonClearGraph.clicked.connect(self.clearGraph)
 
-        # Main - Nodes count label title
-        self.labelStart = QtGui.QLabel(self.tabMain)
-        self.labelStart.setGeometry(QtCore.QRect(30, 280, 150, 30)) 
-        self.labelStart.setObjectName(_fromUtf8("labelStart"))
-        self.labelStart.setText(_translate("MainWindow", "Starting Node : ", None))
-        # Main - nodes combobax
-        self.comboBoxNodes = QtGui.QComboBox(self.tabMain)
-        self.comboBoxNodes.setGeometry(QtCore.QRect(150, 280, 200, 30)) 
-        self.comboBoxNodes.setObjectName(_fromUtf8("comboBoxNodes"))
+        # # Main - Nodes count label title
+        # self.labelStart = QtGui.QLabel(self.tabMain)
+        # self.labelStart.setGeometry(QtCore.QRect(30, 280, 150, 30)) 
+        # self.labelStart.setObjectName(_fromUtf8("labelStart"))
+        # self.labelStart.setText(_translate("MainWindow", "Starting Node : ", None))
+        # # Main - nodes combobax
+        # self.comboBoxNodes = QtGui.QComboBox(self.tabMain)
+        # self.comboBoxNodes.setGeometry(QtCore.QRect(150, 280, 200, 30)) 
+        # self.comboBoxNodes.setObjectName(_fromUtf8("comboBoxNodes"))
   
         # Main - Start election algorithm button
         self.pushButtonStartElection = QtGui.QPushButton(self.tabMain)
@@ -199,17 +199,7 @@ class Ui_MainWindow():
         self.set_check_box()
 
     def startElection(self):
-        self.set_graph_trace()
-        key = self.comboBoxNodes.currentText()
-        start = None
-        for node in self.graph.nodes.values():
-            if node.NAME == str(key):
-                start = node
-                break           
-        if start:
-            self.graph.startElection(start)
-        else:
-            self.labelNodesCount.setText("There is no node..")
+        self.graph.findCoordinates()    
 
     def draw(self):
         self.set_graph_trace()
@@ -233,10 +223,11 @@ class Ui_MainWindow():
         self.graph.MAX_CAPACITY= int( str( self.textEditNodeMaxCapacity.text() )) 
         self.graph.removeAll()
         self.graph.readFiles()
-        self.fill_fields()    
+        self.fill_fields()
+        self.graph.findCoordinates()     
         
     def fill_fields(self):
-        self.fill_combobox()
+        # self.fill_combobox()
         self.set_labels()
     
     def set_labels(self):
@@ -246,11 +237,11 @@ class Ui_MainWindow():
         # self.textEditGrowLimit.setText( str(self.graph.GROWTH_LIMIT) )
         self.textEditNodeMaxCapacity.setText( str(self.graph.MAX_CAPACITY) )
         
-    def fill_combobox(self): 
-        self.comboBoxNodes.clear()
-        nodes = self.graph.nodes
-        for key in nodes.keys():
-            self.comboBoxNodes.addItem( nodes[key].NAME, key ) 
+    # def fill_combobox(self): 
+    #     self.comboBoxNodes.clear()
+    #     nodes = self.graph.nodes
+    #     for key in nodes.keys():
+    #         self.comboBoxNodes.addItem( nodes[key].NAME, key ) 
     
     def set_graph_trace(self):
         if self.checkBoxTraceLog.isChecked():

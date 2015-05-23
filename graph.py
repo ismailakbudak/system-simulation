@@ -13,6 +13,28 @@ import math
 import numpy as np
 pp = pprint.PrettyPrinter(indent=4)
 
+# Find coordinate region 
+def findIndex(X, Y):
+    if X > 0 and Y > 0:
+        index = 0
+    elif X < 0 and Y > 0:
+        index = 1
+    elif X < 0 and Y < 0:
+        index = 2
+    else:
+        index = 3
+    return index
+
+# Get distributions for graph node capacity
+def getDistributions():
+    return [ 
+        Distribution(3,0.6), 
+        Distribution(3,0.6), 
+        Distribution(3,0.6), 
+        Distribution(3,0.6), 
+        Distribution(3,0.6) ]
+
+# Distrubution class
 class Distribution(object):
     """docstring for Distribution"""
     def __init__(self, LOC=0.0, SCALE=1.0, SIZE=None):
@@ -38,12 +60,14 @@ class Node(object):
         self.POSITION = Position(X,Y)
         self.VISITED = False
         self.NAME = 'N:%s-C:%s'%(str(ID),str(CAPACITY))
+        self.SHORT_NAME = 'N:%s'%(str(ID))
         self.COORDINATOR = self
-        self.neighbours={}
+        self.neighbours={} 
+        self.REGION = findIndex(X, Y)  
         self.log("node initialized..")
     
     def __repr__(self):
-        return self.NAME
+        return self.SHORT_NAME
 
     def __str__(self):
         return self.NAME
@@ -120,16 +144,9 @@ class Graph(object):
         self.traceGrowthVisual=False
         self.traceElectionVisual=True
         self.useRandomCapacity=True
-        self.MAX_CAPACITY=6
-        self.GROWTH_LIMIT = 100
-        self.GROWTH_RATE = 10
+        self.MAX_CAPACITY=6  
         self.nodeNumber = 10
-        self.distributions = [ 
-            Distribution(4,9), 
-            Distribution(3,5), 
-            Distribution(5,8), 
-            Distribution(1,4), 
-            Distribution(9,4) ]
+        self.distributions = getDistributions()
         self.log("Graph initialized..")  
             
     """ 
@@ -194,6 +211,23 @@ class Graph(object):
         for node in self.nodes.values():
             node.VISITED = False
 
+    def getNotVisitedNode(self):
+        for node in self.nodes.values():
+            if node.VISITED == False:
+                return node
+        return None                 
+
+    def findCoordinates(self):
+        self.removeVisitedProperty()
+        node = self.getNotVisitedNode()
+        coordinator_list = []
+        while node is not None:
+            value = self.startElection(node)
+            coordinator_list.append( value )
+            node = self.getNotVisitedNode()
+        
+        self.draw_coordinator(coordinator_list ) 
+
     """ 
     Start election algorithm on graph
     Args: 
@@ -202,7 +236,6 @@ class Graph(object):
         None
     """
     def startElection(self,start):
-        self.removeVisitedProperty()
         self.log_election("BEGIN election =============================")
         self.log_election("start node : "+ str(start))
         self.log_election("END election =============================")
@@ -245,9 +278,8 @@ class Graph(object):
         self.log_election("====================================")
         self.log_election("Coordinator : " + str(coordinator) )
         self.log_election("====================================")
-        if self.traceElectionVisual:
-            #self.draw()
-            self.draw_node(coordinator, coordinator_candidates, start)
+
+        return { 'coordinator': coordinator, 'candidates': coordinator_candidates, 'start': start}
         
     """ 
     Print nodes coordinator
@@ -354,7 +386,7 @@ class Graph(object):
     Return: 
         None
     """
-    def draw(self ):
+    def draw(self):
         self.log("graph is drawing..")
         colors = ["#EFDFBB","orange","lightgreen","lightblue","#FFD300","violet","yellow","#7CB9E8","#E1A95F", "#007FFF","#CCFF00","pink","cyan"]
         length = len(colors) - 1
@@ -417,8 +449,7 @@ class Graph(object):
                 edge_color=edge_colors, 
                 width=0.4)
         # Information Text
-        x=-9.0;y=11
-        plt.text(x, y+0.5, 'Some text will come here', bbox=dict(facecolor='red', alpha=0.5)) 
+        x=-9.0;y=11 
         plt.axis('on')
         plt.grid('on')     
         plt.show()  
@@ -431,19 +462,25 @@ class Graph(object):
     Return: 
         None
     """
-    def draw_node(self, coordinator, coordinator_candidates, start):
+    def draw_coordinator(self, coordinator_list):
         self.log("coordinator is drawing..")
-        coordinator_colors = ["orange", "yellow", "pink", "skyblue"]  
+        coordinator_colors = ["orange", "yellow"]  
+        region_colors = ["lightgreen","lightblue","violet","#E1A95F", "#007FFF","#CCFF00"]  
+
         def find_coordinator_color(node):
-            if node.ID == coordinator.ID:
-                return coordinator_colors[0]
-            if node in coordinator_candidates:
-                return coordinator_colors[1]
-            if node.ID == start.ID:
-                return coordinator_colors[2]
-            return coordinator_colors[3] 
+            for value in coordinator_list:
+                coordinator =  value['coordinator']
+                coordinator_candidates = value['candidates']
+                start = value['start']
+                if node.ID == coordinator.ID:
+                    return coordinator_colors[0]
+                if node in coordinator_candidates:
+                    return coordinator_colors[1] 
+            return region_colors[node.REGION]
+
         def find_length(node, node_neighbour):
              return round( math.sqrt( math.pow((node.POSITION.X - node_neighbour.POSITION.X), 2) + math.pow((node.POSITION.Y - node_neighbour.POSITION.Y), 2)), 2)
+        
         graph = nx.DiGraph()
         node_size = []
         for node in self.nodes.values():
@@ -471,33 +508,110 @@ class Graph(object):
         nx.draw(graph,
                 self.positions,
                 with_labels=True,
-                font_size=9,
-                node_size=1800,#node_size,
+                font_size=8,
+                node_size=1300,#node_size,
                 font_family='ubuntu',
                 font_color='red',
                 node_color=node_coordinator_colors, 
                 edgelist=coordinator_edges,
                 edge_color=coordinator_edge_colors, 
                 width=0.4)
+
+        node_lengths = [] 
+        for value in coordinator_list:
+            coordinator =  value['coordinator']
+            candidates = value['candidates']
+            start = value['start']
+
+            self.log('Coordinator %s :'%(str(coordinator)))
+            for candidate in candidates:
+                # Compute shortest path lengths in the graph.
+                shortest_length = nx.shortest_path_length(graph,source=candidate, weight='weight' )
+                total = 0
+                for l in shortest_length.values():
+                    total += l
+                node_lengths.append({ 'total': total, 'node': candidate, 'coordinator': coordinator })   
+                self.log_pp('Shortest path length for %s :'%(str(candidate)), shortest_length , True ) 
+                self.log('Total length : %s \n'%(str(total)))    
+            # Compute shortest paths in the graph. 
+            # returns 0 for target and source
+            #shortest_path = nx.shortest_path(graph,source=coordinator, target=candidates[0], weight='weight' )          
+
+            # Compute all shortest paths in the graph. 
+            # returns same node for target and source
+            #print([p for p in  nx.all_shortest_paths(graph,source=coordinator, target=candidates[0], weight='weight')]) 
+            
+            # Return the average shortest path length.
+            #average_shortest_path_length = nx.average_shortest_path_length(graph, weight='weight' )
+            
+            # Compute shortest path between source and all other nodes reachable from source.   
+            #single_source_shortest_path = nx.single_source_shortest_path(graph,source=coordinator)
+            
+            # Compute the shortest path lengths from source to all reachable nodes.   
+            #single_source_shortest_path_length = nx.single_source_shortest_path_length(graph,source=coordinator)
+            
+            # Returns the shortest path from source to target in a weighted graph G.
+            # returns same node for target and source
+            #dijkstra_path = nx.dijkstra_path(graph, source=coordinator, target=candidates[0], weight='weight')
+            
+            # Returns the shortest path from source to target in a weighted graph G.
+            # returns same node for target and source
+            #dijkstra_path_length = nx.dijkstra_path_length(graph, source=coordinator, target=candidates[0], weight='weight')
+            
+            # Compute shortest path between source and all other reachable nodes for a weighted graph.
+            #shortest_path = nx.single_source_dijkstra_path(graph, source=coordinator, weight='weight')
+            
+            # Compute the shortest path length between source and all other reachable nodes for a weighted graph.
+            #shortest_length = nx.single_source_dijkstra_path_length(graph, source=coordinator, weight='weight')
+            
+            # Compute shortest paths between all nodes in a weighted graph.
+            #shortest_length = nx.all_pairs_dijkstra_path(graph, weight='weight')
+            
+            # Compute shortest path lengths between all nodes in a weighted graph.
+            #shortest_length = nx.all_pairs_dijkstra_path_length(graph, weight='weight')
+            
+            # Compute shortest paths and lengths in a weighted graph G.
+            # returns same node for target and source
+            #single_source_dijkstra = nx.single_source_dijkstra(graph, source=coordinator, target=candidates[0], weight='weight')
+
+            # Compute shortest paths and lengths in a weighted graph G.
+            # returns same node for target and source
+            #shortest_length = nx.bidirectional_dijkstra(graph, source=coordinator, target=candidates[0], weight='weight')
+
+            # Compute shortest paths and lengths in a weighted graph G.
+            # returns same node for target and source
+            #shortest_length = nx.bidirectional_dijkstra(graph, source=coordinator, target=candidates[0], weight='weight')
+                
+            # Compute shortest path lengths and predecessors on shortest paths in weighted graphs. 
+            #bellman_ford = nx.bellman_ford(graph, source=coordinator, weight='weight')
+                
         # Information Text
-        x=-9.0;y=11;i=1;flag=False;dist=1
-        plt.text(x, y+1.5, 'Some text will come here', bbox=dict(facecolor='red', alpha=0.5)) 
+        x=10.0;y=11;i=1;flag=False;dist=1.2 
         for color in coordinator_colors:
             if color == coordinator_colors[0]:
                 text = "Coordinator"
             elif color == coordinator_colors[1]: 
-                text = "Coordinator candidate"
-            elif color == coordinator_colors[2]: 
-                text = "Start point"
-            else:  
-                text = "Normal nodes" 
-            plt.text(x, y, text, bbox=dict(facecolor=color, alpha=0.5))
+                text = "Coordinator candidate"  
+            plt.text(x, y, text, bbox=dict(facecolor=color, alpha=0.8))
             y-=dist
+        
+        y-=dist
+        previous = None
+        for node_length in node_lengths:
+            node = node_length['node']
+            total = node_length['total']     
+            if previous == node.REGION:
+                y-=dist
+            else:
+                y-=2*dist
+                previous = node.REGION
+            text = 'Node: %s Length: %s br'%(node.SHORT_NAME,total)     
+            plt.text( x, y, text, bbox=dict(facecolor=region_colors[node.REGION], alpha=1))       
         plt.axis('on')
         plt.grid('on')     
-        plt.show()  
-        #plt.show(block=False) 
-
+        if self.traceElectionVisual:    
+            plt.show()  
+        
     """ 
     Read nodes and edges from file 
     Args: 
@@ -510,35 +624,24 @@ class Graph(object):
         #edges.txt => node_id node_id 
         try:
             f = open('nodes.txt','r') 
-            ID = 1
             lines = f.readlines()
             for line in lines:
                 content = line.strip().split()
-                if len(content) == 3: 
-                    X = float(content[1])
-                    Y = float(content[2])
+                if len(content) == 4: 
+                    ID =  int(content[0])
+                    X = float(content[2])
+                    Y = float(content[3])
                     if self.useRandomCapacity: 
-                        if X > 0 and Y > 0:
-                            index = 0
-                        elif X < 0 and Y > 0:
-                            index = 1
-                        elif X > 0 and Y < 0:
-                            index = 2
-                        else:
-                            index = 3     
+                        index = findIndex(X, Y)      
                         CAPACITY =  round(  np.random.normal(
                             loc=self.distributions[index].LOC, 
                             scale=self.distributions[index].SCALE, 
-                            size=self.distributions[index].SIZE), 2 ) #random.randint(0, self.MAX_CAPACITY)
+                            size=self.distributions[index].SIZE), 0 ) #random.randint(0, self.MAX_CAPACITY)
                     else:
-                        CAPACITY = int(content[0])
-
+                        CAPACITY = int(content[1])
                     node = Node(ID, CAPACITY, X, Y)
                     self.add(node)
-                    self.positions[node] = (X,Y)
-                    if ID == (self.nodeNumber * 4):
-                        break
-                    ID += 1 
+                    self.positions[node] = (X,Y) 
 
             f = open('edges.txt','r')
             lines = f.readlines()
