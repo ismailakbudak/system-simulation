@@ -116,6 +116,25 @@ class Ui_MainWindow():
         self.checkBoxTraceElectionVisual.setObjectName(_fromUtf8("checkBoxTraceElectionVisual"))
         self.checkBoxTraceElectionVisual.setText(_translate("MainWindow", "Election Result Display", None))
         self.checkBoxTraceElectionVisual.setChecked(False) 
+        # settings - Coordinator Count label title
+        self.labelCoordinatorCount = QtGui.QLabel(self.tabSettings)
+        self.labelCoordinatorCount.setGeometry(QtCore.QRect(10, settingUp + 4*settingSpace, 170, 30)) 
+        self.labelCoordinatorCount.setObjectName(_fromUtf8("labelCoordinatorCount"))
+        self.labelCoordinatorCount.setText(_translate("MainWindow", "Coordinator Count: ", None))
+        # settings - labelCoordinatorCount label title
+        self.textEditlabelCoordinatorCount = QtGui.QLineEdit(self.tabSettings)
+        self.textEditlabelCoordinatorCount.setGeometry(QtCore.QRect(180, settingUp + 4*settingSpace, 200, 30))
+        self.textEditlabelCoordinatorCount.setObjectName(_fromUtf8("textEditlabelCoordinatorCount")) 
+        # settings - label Weight Value label title
+        self.labelWeightValue = QtGui.QLabel(self.tabSettings)
+        self.labelWeightValue.setGeometry(QtCore.QRect(10, settingUp + 5*settingSpace, 170, 30)) 
+        self.labelWeightValue.setObjectName(_fromUtf8("labelWeightValue"))
+        self.labelWeightValue.setText(_translate("MainWindow", "Weight value: ", None))
+        # settings - textEditlabelWeightValue label title
+        self.textEditlabelWeightValue = QtGui.QLineEdit(self.tabSettings)
+        self.textEditlabelWeightValue.setGeometry(QtCore.QRect(180, settingUp + 5*settingSpace, 200, 30))
+        self.textEditlabelWeightValue.setObjectName(_fromUtf8("textEditlabelWeightValue")) 
+        
 
         # Tab main initialized
         self.tabNode = QtGui.QWidget()
@@ -160,7 +179,9 @@ class Ui_MainWindow():
     
     def set_labels(self):
         num = len(self.graph.nodes.keys())
-        self.labelNodesCount.setText(  "Number of Nodes : %s" % ( str(num) ) ) 
+        self.labelNodesCount.setText(  "Number of Nodes : %s" % ( str(num) ) )
+        self.textEditlabelCoordinatorCount.setText( str(self.graph.cordinatorCount) )
+        self.textEditlabelWeightValue.setText( str(self.graph.weightValue) ) 
     
     def set_graph_trace(self):
         if self.checkBoxTraceLog.isChecked():
@@ -182,6 +203,9 @@ class Ui_MainWindow():
             self.graph.traceElectionVisual = True
         else:
             self.graph.traceElectionVisual = False
+
+        self.graph.cordinatorCount = int( self.textEditlabelCoordinatorCount.text()) 
+        self.graph.weightValue = float( self.textEditlabelWeightValue.text())     
             
     def set_check_box(self):
         if self.graph.traceLog:

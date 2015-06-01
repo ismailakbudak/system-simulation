@@ -43,10 +43,10 @@ Return:
 """
 def getDistributions():
     return [ 
-        Distribution(2,2), 
-        Distribution(1,5), 
-        Distribution(3,6), 
-        Distribution(7,4), 
+        Distribution(2,1), 
+        Distribution(3,1), 
+        Distribution(3,0.1), 
+        Distribution(3,1), 
         Distribution(3,0.6) ]
 
 """ 
@@ -180,6 +180,8 @@ class Graph(object):
         self.nodes={}
         self.positions={}
         self.lastID=0 
+        self.cordinatorCount=1
+        self.weightValue=1
         self.traceElection=True
         self.traceLog=True 
         self.traceElectionVisual=True
@@ -277,166 +279,81 @@ class Graph(object):
         None
     """        
     def findCoordinates(self):
+        # Find all shortest path length
         self.removeVisitedProperty()
         node = self.getNotVisitedNode()
         coordinator_list = []
         while node is not None:
-            value = self.startElection(node)
-            coordinator_list.append( value )
-            node = self.getNotVisitedNode()
+            value = self.findLengths(node)  
+            coordinator_list.append( value )    
+            node = self.getNotVisitedNode() 
         
-        if len(coordinator_list) > 0:
-            self.draw_coordinator(coordinator_list ) 
+        # Sort list        
+        sorted_list = sorted(coordinator_list, key=lambda value: value['weight_length'])
+        self.log_pp('Sorted result :', sorted_list , True ) 
+
+        # Select nodes that has minimum length    
+        selected_nodes = []    
+        if len(sorted_list) > self.cordinatorCount:
+            i = 0; j = 0
+            while j < self.cordinatorCount:
+                value = sorted_list[i]
+                if value['length'] > 0:
+                    selected_nodes.append(value)
+                    j += 1
+                i += 1    
         else:
-            self.log('There is not any nodes')    
+            selected_nodes = sorted_list
+            self.log('sorted list is below than coordinator count')
+
+        self.log_pp('Selected nodes result :', selected_nodes , True )   
+
+        if len(selected_nodes) > 0:
+            self.draw_coordinator(selected_nodes)   
+        else:
+            self.log('there is no selected nodes')
+
     """ 
-    Start election algorithm on graph
+    Find distance between two position
     Args: 
-        start: node object that is start point 
+        node: Node object
+        node2: Node object
     Return: 
         None
-    """
-    def startElection(self,start):
-        self.log_election("BEGIN election =============================")
-        self.log_election("start node : "+ start.SHORT_NAME)
-        self.log_election("END election =============================")
-        graph = self.nodes
-        visited = {}
-        visited_index = {} 
-        queue = [start] 
-        while queue:
-            vertex = queue.pop(0)  
-            visited[vertex] = []
-            visited_index[vertex.ID] = []
-            vertex.VISITED = True 
-            for node in  vertex.neighbours.values(): 
-                if not(node.VISITED):
-                    visited[vertex].append(node)
-                    visited_index[vertex.ID].append(node.ID)
-                    queue.append( node )  
-                    node.VISITED = True
-
-        self.log_pp( "Graph visit path", visited_index,  self.traceElection  ) 
-
-        coordinator_candidates = self.findMaxArray(visited, start, [start])
-        
-        coordinator = self.findMax(visited, start, start)
-        
-        coordinator = random.choice(coordinator_candidates)
-        self.log_election("====================================")
-        self.log_election("First status for nodes coordinator")
-        self.log_election("====================================")
-        self.print_coordinator()
-        self.informCoordinator(visited, start, coordinator)
-        self.log_election("====================================")
-        self.log_election("After inform coordinator to nodes ")
-        self.log_election("====================================")
-        self.print_coordinator()   
-        #self.log_election("====================================")
-        #self.log_election("One coordinator result: " + str(coordinator) )
-        self.log_election("====================================")
-        self.log_election("Election result : " + str(coordinator_candidates) )
-        self.log_election("====================================")
-        self.log_election("Coordinator : " + coordinator.SHORT_NAME )
-        self.log_election("====================================")
-
-        return { 'coordinator': coordinator, 'candidates': coordinator_candidates, 'start': start}
-        
+    """       
+    def findDistance(self, node, node2):
+         return round( math.sqrt( math.pow((node.POSITION.X - node2.POSITION.X), 2) + math.pow((node.POSITION.Y - node2.POSITION.Y), 2)), 2)
+    
     """ 
-    Print nodes coordinator
-    Args:
-        None  
-    Return: 
-        None
-    """      
-    def print_coordinator(self):
-        for node in self.nodes.values():
-            self.log_election(" %s -> %s " % (node.SHORT_NAME, node.COORDINATOR.SHORT_NAME) )    
-        
-    """ 
-    Find nodes that has maximum capacity
+    Find total shortest path length for given node
     Args: 
-        visited: graph find path
-        start: start point node object 
-        max: array of node that has maximum capacity
+        node: startNode object 
     Return: 
-        Node objects array
-    """        
-    def findMaxArray(self,visited,start,max=None):   
-        if len(visited[start]) == 0:
-            if max[0].CAPACITY > start.CAPACITY:
-                return max
-            elif max[0].CAPACITY == start.CAPACITY:
-                if start not in max:
-                    max.append(start)
-                return max            
-            else:    
-                return [start]
-        if max[0].CAPACITY < start.CAPACITY:
-                max = [start]         
-        elif max[0].CAPACITY == start.CAPACITY:
-            if start not in max:
-                max.append(start) 
-        for node in visited[start]:
-            val = self.findMaxArray(visited,node, max) 
-            if max[0].CAPACITY < val[0].CAPACITY:
-                max = val         
-            elif max[0].CAPACITY == val[0].CAPACITY:
-                for node in val:
-                    if node not in max:
-                        max.append(node)               
-        return max   
+        object: { 'node': node, 'length': length, 'weight_length': value } 
+    """       
+    def findLengths(self, startNode): 
+        # Set startNode attribute 
+        startNode.VISITED = True
+        
+        # Create graph
+        graph = nx.DiGraph() 
+        for node in self.nodes.values():  
+            graph.add_node(node)
+            for node_neighbour in node.neighbours.values():
+                graph.add_edge( node, node_neighbour, weight=self.findDistance(node, node_neighbour) )  
+        
+        # Find shortest path   
+        shortest_length = nx.shortest_path_length(graph,source=startNode, weight='weight' )
+        total = 0
+        for l in shortest_length.values():
+            total += l
 
-    """ 
-    Find node that has maximum capacity
-    Args: 
-        visited: graph find path
-        start: start point node object 
-        max:  node that has maximum capacity
-    Return: 
-        Node object
-    """    
-    def findMax(self,visited,start,max=None):  
-        if len(visited[start]) == 0:
-            if max.CAPACITY > start.CAPACITY:
-                return max
-            elif max.CAPACITY == start.CAPACITY:
-                vals = [max,start]
-                return random.choice(vals)        
-            else:    
-                return start
-        if max.CAPACITY < start.CAPACITY:
-            max = start         
-        elif max.CAPACITY == start.CAPACITY:
-            vals = [max,start]
-            max = random.choice(vals)  
-        for node in visited[start]:
-            val = self.findMax(visited,node, max) 
-            if max.CAPACITY < val.CAPACITY:
-                max = val         
-            elif max.CAPACITY == val.CAPACITY:
-                vals = [max,val]
-                max = random.choice(vals)                 
-        return max
-
-    """ 
-    Inform  coordinator to all nodes 
-    Args: 
-        visited: graph find path
-        start: start point node object 
-        coordinator:  node that is new coordinator
-    Return: 
-        Node object
-    """
-    def informCoordinator(self, visited, start, coordinator):
-        if len(visited[start]) == 0:
-            start.COORDINATOR = coordinator
-            return True
-        start.COORDINATOR = coordinator  
-        for node in visited[start]:
-            self.informCoordinator(visited,node, coordinator) 
-        return True
-
+        value = { 'node': startNode, 'length': round(total,2), 'weight_length': round(total / (self.weightValue * startNode.CAPACITY), 2) }    
+        # self.log_pp('Shortest path length for %s :'%(startNode.SHORT_NAME), shortest_length , True ) 
+        # self.log_election('Total length : %s \n'%( str( value['length'] )))
+        # self.log_election('Total length with weight value: %s \n'%(str(value['weight_length'])))
+        return value                         
+       
     """ 
     Draw all nodes with CAPACITY property
     Args: 
@@ -507,23 +424,16 @@ class Graph(object):
     """
     def draw_coordinator(self, coordinator_list):
         self.log("coordinator is drawing..")
-        coordinator_colors = ["orange", "yellow"]  
+        coordinator_colors = ["yellow"]  
         region_colors = ["lightgreen","lightblue","violet","#E1A95F", "#007FFF","#CCFF00"]  
 
         def find_coordinator_color(node):
             for value in coordinator_list:
-                coordinator =  value['coordinator']
-                coordinator_candidates = value['candidates']
-                start = value['start']
+                coordinator =  value['node']  
                 if node.ID == coordinator.ID:
-                    return coordinator_colors[0]
-                if node in coordinator_candidates:
-                    return coordinator_colors[1] 
+                    return coordinator_colors[0] 
             return region_colors[node.REGION]
-
-        def find_length(node, node_neighbour):
-             return round( math.sqrt( math.pow((node.POSITION.X - node_neighbour.POSITION.X), 2) + math.pow((node.POSITION.Y - node_neighbour.POSITION.Y), 2)), 2)
-        
+ 
         graph = nx.DiGraph()
         node_size = []
         for node in self.nodes.values():
@@ -532,7 +442,7 @@ class Graph(object):
             for node_neighbour in node.neighbours.values():
                 graph.add_edge( node, 
                                 node_neighbour, 
-                                weight=find_length(node, node_neighbour), 
+                                weight=self.findDistance(node, node_neighbour), 
                                 coordinator_color=find_coordinator_color(node_neighbour) )
         node_coordinator_colors = map(find_coordinator_color, graph.nodes()) 
         coordinator_edges,coordinator_edge_colors = zip(*nx.get_edge_attributes(graph,'coordinator_color').items()) 
@@ -559,96 +469,27 @@ class Graph(object):
                 edgelist=coordinator_edges,
                 edge_color=coordinator_edge_colors, 
                 width=0.4)
-
-        node_lengths = [] 
-        for value in coordinator_list:
-            coordinator =  value['coordinator']
-            candidates = value['candidates']
-            start = value['start']
-
-            self.log('Coordinator %s :'%(coordinator.SHORT_NAME))
-            for candidate in candidates:
-                # Compute shortest path lengths in the graph.
-                shortest_length = nx.shortest_path_length(graph,source=candidate, weight='weight' )
-                total = 0
-                for l in shortest_length.values():
-                    total += l
-                node_lengths.append({ 'total': total, 'node': candidate, 'coordinator': coordinator })   
-                self.log_pp('Shortest path length for %s :'%(candidate.SHORT_NAME), shortest_length , True ) 
-                self.log('Total length : %s \n'%(str(total)))    
-            # Compute shortest paths in the graph. 
-            # returns 0 for target and source
-            #shortest_path = nx.shortest_path(graph,source=coordinator, target=candidates[0], weight='weight' )          
-
-            # Compute all shortest paths in the graph. 
-            # returns same node for target and source
-            #print([p for p in  nx.all_shortest_paths(graph,source=coordinator, target=candidates[0], weight='weight')]) 
-            
-            # Return the average shortest path length.
-            #average_shortest_path_length = nx.average_shortest_path_length(graph, weight='weight' )
-            
-            # Compute shortest path between source and all other nodes reachable from source.   
-            #single_source_shortest_path = nx.single_source_shortest_path(graph,source=coordinator)
-            
-            # Compute the shortest path lengths from source to all reachable nodes.   
-            #single_source_shortest_path_length = nx.single_source_shortest_path_length(graph,source=coordinator)
-            
-            # Returns the shortest path from source to target in a weighted graph G.
-            # returns same node for target and source
-            #dijkstra_path = nx.dijkstra_path(graph, source=coordinator, target=candidates[0], weight='weight')
-            
-            # Returns the shortest path from source to target in a weighted graph G.
-            # returns same node for target and source
-            #dijkstra_path_length = nx.dijkstra_path_length(graph, source=coordinator, target=candidates[0], weight='weight')
-            
-            # Compute shortest path between source and all other reachable nodes for a weighted graph.
-            #shortest_path = nx.single_source_dijkstra_path(graph, source=coordinator, weight='weight')
-            
-            # Compute the shortest path length between source and all other reachable nodes for a weighted graph.
-            #shortest_length = nx.single_source_dijkstra_path_length(graph, source=coordinator, weight='weight')
-            
-            # Compute shortest paths between all nodes in a weighted graph.
-            #shortest_length = nx.all_pairs_dijkstra_path(graph, weight='weight')
-            
-            # Compute shortest path lengths between all nodes in a weighted graph.
-            #shortest_length = nx.all_pairs_dijkstra_path_length(graph, weight='weight')
-            
-            # Compute shortest paths and lengths in a weighted graph G.
-            # returns same node for target and source
-            #single_source_dijkstra = nx.single_source_dijkstra(graph, source=coordinator, target=candidates[0], weight='weight')
-
-            # Compute shortest paths and lengths in a weighted graph G.
-            # returns same node for target and source
-            #shortest_length = nx.bidirectional_dijkstra(graph, source=coordinator, target=candidates[0], weight='weight')
-
-            # Compute shortest paths and lengths in a weighted graph G.
-            # returns same node for target and source
-            #shortest_length = nx.bidirectional_dijkstra(graph, source=coordinator, target=candidates[0], weight='weight')
-                
-            # Compute shortest path lengths and predecessors on shortest paths in weighted graphs. 
-            #bellman_ford = nx.bellman_ford(graph, source=coordinator, weight='weight')
-                
+ 
         # Information Text
         x=10.0;y=11;i=1;flag=False;dist=1.2 
         for color in coordinator_colors:
             if color == coordinator_colors[0]:
-                text = "Coordinator"
-            elif color == coordinator_colors[1]: 
-                text = "Coordinator candidate"  
+                text = "Coordinator" 
             plt.text(x, y, text, bbox=dict(facecolor=color, alpha=0.8))
             y-=dist
         
         y-=dist
         previous = None
-        for node_length in node_lengths:
+        for node_length in coordinator_list:
             node = node_length['node']
-            total = node_length['total']     
+            length = node_length['length']
+            weight_length = node_length['weight_length']      
             if previous == node.REGION:
                 y-=dist
             else:
-                y-=2*dist
+                y-=1*dist
                 previous = node.REGION
-            text = 'Node: %s Length: %s br'%(node.SHORT_NAME,total)     
+            text = '%s Length: %s br Weighted length: %s br'%(node.SHORT_NAME,length, weight_length)     
             plt.text( x, y, text, bbox=dict(facecolor=region_colors[node.REGION], alpha=1))       
         plt.axis('on')
         plt.grid('on')     
@@ -679,7 +520,7 @@ class Graph(object):
                         CAPACITY =  round(  np.random.normal(
                             loc=self.distributions[index].LOC, 
                             scale=self.distributions[index].SCALE, 
-                            size=self.distributions[index].SIZE), 0 ) #random.randint(0, self.MAX_CAPACITY)
+                            size=self.distributions[index].SIZE), 2 ) #random.randint(0, self.MAX_CAPACITY)
                     else:
                         CAPACITY = int(content[1])
                     node = Node(ID, CAPACITY, X, Y)
